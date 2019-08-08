@@ -1,0 +1,16 @@
+*.aux
+*.log
+*.out
+*.toc
+*.pdf
+.vscode
+.Xil
+_x
+*.xo
+build/
+*.ltx
+*.xclbin
+*.info
+*.csv
+*.fls
+*.fdb_latexmk
