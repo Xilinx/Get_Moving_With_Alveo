@@ -131,18 +131,18 @@ int main(int argc, char *argv[])
     outBufVec.push_back(c_from_device);
     et.finish();
 
-    // Send the buffers down to the Alveo card
-    et.add("Memory object migration enqueue");
-    cl::Event event_sp;
-    q.enqueueMigrateMemObjects(inBufVec, 0, NULL, &event_sp);
-    clWaitForEvents(1, (const cl_event *)&event_sp);
-
     // Set vadd kernel arguments
     et.add("Set kernel arguments");
     krnl.setArg(0, a_to_device);
     krnl.setArg(1, b_to_device);
     krnl.setArg(2, c_from_device);
     krnl.setArg(3, BUFSIZE);
+
+    // Send the buffers down to the Alveo card
+    et.add("Memory object migration enqueue");
+    cl::Event event_sp;
+    q.enqueueMigrateMemObjects(inBufVec, 0, NULL, &event_sp);
+    clWaitForEvents(1, (const cl_event *)&event_sp);
 
     et.add("OCL Enqueue task");
 

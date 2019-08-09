@@ -90,6 +90,10 @@ int main(int argc, char *argv[])
     // host pointer
     et.add("Allocate contiguous OpenCL buffers");
     std::vector<cl::Memory> inBufVec, outBufVec;
+    cl_mem_ext_ptr_t bank_ext;
+    bank_ext.flags = XCL_MEM_DDR_BANK0 | XCL_MEM_TOPOLOGY;
+    bank_ext.obj   = NULL;
+    bank_ext.param = 0;
     cl::Buffer a_buf(context,
                      static_cast<cl_mem_flags>(CL_MEM_READ_ONLY |
                                                CL_MEM_ALLOC_HOST_PTR),
@@ -110,14 +114,22 @@ int main(int argc, char *argv[])
                      NULL);
     cl::Buffer d_buf(context,
                      static_cast<cl_mem_flags>(CL_MEM_READ_WRITE |
-                                               CL_MEM_ALLOC_HOST_PTR),
+                                               CL_MEM_ALLOC_HOST_PTR |
+                                               CL_MEM_EXT_PTR_XILINX),
                      BUFSIZE * sizeof(uint32_t),
-                     NULL,
+                     &bank_ext,
                      NULL);
     inBufVec.push_back(a_buf);
     inBufVec.push_back(b_buf);
     outBufVec.push_back(c_buf);
     et.finish();
+
+    // Set vadd kernel arguments
+    et.add("Set kernel arguments");
+    krnl.setArg(0, a_buf);
+    krnl.setArg(1, b_buf);
+    krnl.setArg(2, c_buf);
+    krnl.setArg(3, BUFSIZE);
 
     et.add("Map buffers to userspace pointers");
     uint32_t *a = (uint32_t *)q.enqueueMapBuffer(a_buf,
@@ -154,13 +166,6 @@ int main(int argc, char *argv[])
     cl::Event event_sp;
     q.enqueueMigrateMemObjects(inBufVec, 0, NULL, &event_sp);
     clWaitForEvents(1, (const cl_event *)&event_sp);
-
-    // Set vadd kernel arguments
-    et.add("Set kernel arguments");
-    krnl.setArg(0, a_buf);
-    krnl.setArg(1, b_buf);
-    krnl.setArg(2, c_buf);
-    krnl.setArg(3, BUFSIZE);
 
     et.add("OCL Enqueue task");
 
