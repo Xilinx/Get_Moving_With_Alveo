@@ -81,19 +81,6 @@ int main(int argc, char *argv[])
                   << image.cols << " is not." << std::endl;
         return EXIT_FAILURE;
     }
-    if ((image.rows * image.cols * 24) % 512 != 0) {
-        std::cout << "ERROR: For this kernel the input width and height of the image," << std::endl
-                  << "       multiplied by pixel depth, must be evenly divisible by the" << std::endl
-                  << "       interface width." << std::endl
-                  << std::endl;
-        std::cout << image.cols << "x" << image.rows << " * 24 bpp % 512 bits = "
-                  << (image.rows * image.cols * 24) % 512 << std::endl
-                  << std::endl;
-
-
-        std::cout << "Please choose another image" << std::endl;
-        return EXIT_FAILURE;
-    }
     if ((in_height > 2160) || (in_width > 3840)) {
         std::cout << "ERROR: Input image must be <= 4k (3840x2160), current image is "
                   << in_width << "x" << in_height << std::endl;
@@ -107,12 +94,6 @@ int main(int argc, char *argv[])
         std::cout << "WARNING: Output image width must be divisible by 8, "
                   << out_width << " is not." << std::endl;
         out_width = nearest_resolution_div8(out_width);
-        std::cout << "Adjusting to " << out_width << "x" << out_height << std::endl;
-    }
-    if (out_height % 8 != 0) {
-        std::cout << "WARNING: Output image height must be divisible by 8, "
-                  << out_height << " is not." << std::endl;
-        out_height = nearest_resolution_div8(out_height);
         std::cout << "Adjusting to " << out_width << "x" << out_height << std::endl;
     }
     if ((out_height > 2160) || (out_width > 3840)) {
