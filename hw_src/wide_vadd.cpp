@@ -115,16 +115,6 @@ extern "C"
                 uint512_dt tmpV2 = v2_local[j];
                 out[i + j]       = tmpV1 + tmpV2; // Vector Addition Operation
             }
-
-            //burst write the result
-            /*
-        out_write:
-            for (int j = 0; j < chunk_size; j++) {
-#pragma HLS pipeline
-#pragma HLS LOOP_TRIPCOUNT min = 256 max = 256
-                out[i + j] = result_local[j];
-            }
-            */
         }
     }
 }

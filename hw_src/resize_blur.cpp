@@ -132,58 +132,32 @@ extern "C"
 #pragma HLS INTERFACE s_axilite port = sigma bundle = control
 #pragma HLS INTERFACE s_axilite port = return bundle = control
 
-        xf::Mat<TYPE, MAX_IN_HEIGHT, MAX_IN_WIDTH, NPC> in_mat;
+        xf::Mat<TYPE, MAX_IN_HEIGHT, MAX_IN_WIDTH, NPC> in_mat(height_in, width_in);
         DYN_PRAGMA(HLS stream variable = in_mat.data depth = STREAM_DEPTH)
 
-        xf::Mat<XF_8UC1, MAX_IN_HEIGHT, MAX_IN_WIDTH, NPC> in_r;
+        xf::Mat<XF_8UC1, MAX_IN_HEIGHT, MAX_IN_WIDTH, NPC> in_r(height_in, width_in);
         DYN_PRAGMA(HLS stream variable = in_r.data depth = STREAM_DEPTH)
-        xf::Mat<XF_8UC1, MAX_IN_HEIGHT, MAX_IN_WIDTH, NPC> in_g;
+        xf::Mat<XF_8UC1, MAX_IN_HEIGHT, MAX_IN_WIDTH, NPC> in_g(height_in, width_in);
         DYN_PRAGMA(HLS stream variable = in_g.data depth = STREAM_DEPTH)
-        xf::Mat<XF_8UC1, MAX_IN_HEIGHT, MAX_IN_WIDTH, NPC> in_b;
+        xf::Mat<XF_8UC1, MAX_IN_HEIGHT, MAX_IN_WIDTH, NPC> in_b(height_in, width_in);
         DYN_PRAGMA(HLS stream variable = in_b.data depth = STREAM_DEPTH)
 
-        xf::Mat<XF_8UC1, MAX_OUT_HEIGHT, MAX_OUT_WIDTH, NPC> out_r;
+        xf::Mat<XF_8UC1, MAX_OUT_HEIGHT, MAX_OUT_WIDTH, NPC> out_r(height_out, width_out);
         DYN_PRAGMA(HLS stream variable = out_r.data depth = STREAM_DEPTH)
-        xf::Mat<XF_8UC1, MAX_OUT_HEIGHT, MAX_OUT_WIDTH, NPC> out_g;
+        xf::Mat<XF_8UC1, MAX_OUT_HEIGHT, MAX_OUT_WIDTH, NPC> out_g(height_out, width_out);
         DYN_PRAGMA(HLS stream variable = out_g.data depth = STREAM_DEPTH)
-        xf::Mat<XF_8UC1, MAX_OUT_HEIGHT, MAX_OUT_WIDTH, NPC> out_b;
+        xf::Mat<XF_8UC1, MAX_OUT_HEIGHT, MAX_OUT_WIDTH, NPC> out_b(height_out, width_out);
         DYN_PRAGMA(HLS stream variable = out_b.data depth = STREAM_DEPTH)
 
-        xf::Mat<XF_8UC1, MAX_OUT_HEIGHT, MAX_OUT_WIDTH, NPC> blur_r;
+        xf::Mat<XF_8UC1, MAX_OUT_HEIGHT, MAX_OUT_WIDTH, NPC> blur_r(height_out, width_out);
         DYN_PRAGMA(HLS stream variable = blur_r.data depth = STREAM_DEPTH)
-        xf::Mat<XF_8UC1, MAX_OUT_HEIGHT, MAX_OUT_WIDTH, NPC> blur_g;
+        xf::Mat<XF_8UC1, MAX_OUT_HEIGHT, MAX_OUT_WIDTH, NPC> blur_g(height_out, width_out);
         DYN_PRAGMA(HLS stream variable = blur_g.data depth = STREAM_DEPTH)
-        xf::Mat<XF_8UC1, MAX_OUT_HEIGHT, MAX_OUT_WIDTH, NPC> blur_b;
+        xf::Mat<XF_8UC1, MAX_OUT_HEIGHT, MAX_OUT_WIDTH, NPC> blur_b(height_out, width_out);
         DYN_PRAGMA(HLS stream variable = blur_b.data depth = STREAM_DEPTH)
 
-
-        xf::Mat<XF_8UC3, MAX_OUT_HEIGHT, MAX_OUT_WIDTH, NPC> out_mat;
+        xf::Mat<XF_8UC3, MAX_OUT_HEIGHT, MAX_OUT_WIDTH, NPC> out_mat(height_out, width_out);
         DYN_PRAGMA(HLS stream variable = out_mat.data depth = STREAM_DEPTH)
-
-        in_mat.rows = height_in;
-        in_mat.cols = width_in;
-        in_r.rows   = height_in;
-        in_r.cols   = width_in;
-        in_g.rows   = height_in;
-        in_g.cols   = width_in;
-        in_b.rows   = height_in;
-        in_b.cols   = width_in;
-
-        out_mat.rows = height_out;
-        out_mat.cols = width_out;
-        out_r.rows   = height_out;
-        out_r.cols   = width_out;
-        out_g.rows   = height_out;
-        out_g.cols   = width_out;
-        out_b.rows   = height_out;
-        out_b.cols   = width_out;
-
-        blur_r.rows = height_out;
-        blur_r.cols = width_out;
-        blur_g.rows = height_out;
-        blur_g.cols = width_out;
-        blur_b.rows = height_out;
-        blur_b.cols = width_out;
 
 #pragma HLS DATAFLOW
 
