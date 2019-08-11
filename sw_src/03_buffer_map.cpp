@@ -90,10 +90,6 @@ int main(int argc, char *argv[])
     // host pointer
     et.add("Allocate contiguous OpenCL buffers");
     std::vector<cl::Memory> inBufVec, outBufVec;
-    cl_mem_ext_ptr_t bank_ext;
-    bank_ext.flags = XCL_MEM_DDR_BANK0 | XCL_MEM_TOPOLOGY;
-    bank_ext.obj   = NULL;
-    bank_ext.param = 0;
     cl::Buffer a_buf(context,
                      static_cast<cl_mem_flags>(CL_MEM_READ_ONLY |
                                                CL_MEM_ALLOC_HOST_PTR),
@@ -112,6 +108,13 @@ int main(int argc, char *argv[])
                      BUFSIZE * sizeof(uint32_t),
                      NULL,
                      NULL);
+    
+    // For buffer D, since we aren't using it for a kernel we'll specify the
+    // bank allocation
+    cl_mem_ext_ptr_t bank_ext;
+    bank_ext.flags = 0 | XCL_MEM_TOPOLOGY;
+    bank_ext.obj   = NULL;
+    bank_ext.param = 0;
     cl::Buffer d_buf(context,
                      static_cast<cl_mem_flags>(CL_MEM_READ_WRITE |
                                                CL_MEM_ALLOC_HOST_PTR |
