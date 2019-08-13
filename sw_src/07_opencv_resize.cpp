@@ -43,15 +43,15 @@ EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 uint32_t nearest_resolution_div8(uint32_t n)
 {
-    uint32_t q = n / 8;
+    int32_t q = n / 8;
 
-    uint32_t n1 = 8 * q;
-    uint32_t n2 = 8 * (q + 1);
+    int32_t n1 = 8 * q;
+    int32_t n2 = 8 * (q + 1);
 
     if (abs(n - n1) < abs(n - n2)) {
-        return n1;
+        return (uint32_t)n1;
     }
-    return n2;
+    return (uint32_t)n2;
 }
 
 
