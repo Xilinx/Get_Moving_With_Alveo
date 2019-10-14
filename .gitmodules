@@ -1,3 +1,0 @@
-[submodule "hw_src/xfopencv"]
-	path = hw_src/xfopencv
-	url = https://github.com/Xilinx/xfopencv.git
