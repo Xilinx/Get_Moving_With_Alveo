@@ -1,0 +1,3 @@
+[submodule "hw_src/Vitis_Libraries"]
+	path = hw_src/Vitis_Libraries
+	url = https://github.com/Xilinx/Vitis_Libraries.git
