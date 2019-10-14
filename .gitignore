@@ -14,3 +14,5 @@ build/
 *.csv
 *.fls
 *.fdb_latexmk
+*.compile_summary*
+vitis_analyzer*
