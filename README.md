@@ -16,8 +16,8 @@ This repository includes both hardware and software sources.
 This repository has been validated against the Vitis Unified Development Environment
 release 2019.2 and has been hardware-validated against the following platforms:
 
-| Alveo Card | Platform                  | XRT      |
-| ---------- | ------------------------- | -------- |
+| Alveo Card |         Platform          |   XRT    |
+| :--------- | :-----------------------: | :------: |
 | U200       | xilinx_u200_xdma_201830_2 | 2.3.1198 |
 | U250       | xilinx_u250_xdma_201830_2 | 2.3.1198 |
 
@@ -70,5 +70,5 @@ arguments. Running these examples with no command line arguments will print a he
 message with further instructions.
 
 ```bash
-./00_load_kernels alveo_examples
+./00_load_kernels
 ```
