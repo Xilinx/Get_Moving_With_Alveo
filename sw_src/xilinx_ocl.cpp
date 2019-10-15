@@ -2,8 +2,9 @@
 
 #include <unistd.h>
 
-namespace swm {
-std::vector<cl::Device> XilinxOcl::find_xilinx_devices()
+namespace xilinx {
+namespace example_utils {
+std::vector<cl::Device> XilinxOclHelper::find_xilinx_devices()
 {
     size_t i;
     std::vector<cl::Platform> platforms;
@@ -27,7 +28,7 @@ std::vector<cl::Device> XilinxOcl::find_xilinx_devices()
     return devices;
 }
 
-void XilinxOcl::initialize(std::string xclbin_file_name)
+void XilinxOclHelper::initialize(std::string xclbin_file_name)
 {
     // Find Xilinx OpenCL devices
     std::vector<cl::Device> devices = find_xilinx_devices();
@@ -59,7 +60,7 @@ void XilinxOcl::initialize(std::string xclbin_file_name)
     is_initialized = true;
 }
 
-cl::Kernel XilinxOcl::get_kernel(std::string kernel_name)
+cl::Kernel XilinxOclHelper::get_kernel(std::string kernel_name)
 {
     if (!is_initialized) {
         throw_lineexception("Attempted to get kernel without initializing OCL");
@@ -69,7 +70,7 @@ cl::Kernel XilinxOcl::get_kernel(std::string kernel_name)
     return krnl;
 }
 
-cl::CommandQueue XilinxOcl::get_command_queue(bool in_order, bool enable_profiling)
+cl::CommandQueue XilinxOclHelper::get_command_queue(bool in_order, bool enable_profiling)
 {
     if (!is_initialized) {
         throw_lineexception("Attempted to get command queue without initializing OCL");
@@ -88,7 +89,7 @@ cl::CommandQueue XilinxOcl::get_command_queue(bool in_order, bool enable_profili
     return q;
 }
 
-cl::Buffer XilinxOcl::create_buffer(size_t size, cl_mem_flags flags)
+cl::Buffer XilinxOclHelper::create_buffer(size_t size, cl_mem_flags flags)
 {
     if (!is_initialized) {
         throw_lineexception("Attempted to create buffer before initialization");
@@ -98,7 +99,7 @@ cl::Buffer XilinxOcl::create_buffer(size_t size, cl_mem_flags flags)
     return buf;
 }
 
-cl::Buffer XilinxOcl::create_buffer_in_bank(int bank, size_t size, cl_mem_flags flags)
+cl::Buffer XilinxOclHelper::create_buffer_in_bank(int bank, size_t size, cl_mem_flags flags)
 {
     if (!is_initialized) {
         throw_lineexception("Attempted to create buffer before initialization");
@@ -113,31 +114,32 @@ cl::Buffer XilinxOcl::create_buffer_in_bank(int bank, size_t size, cl_mem_flags 
     return buf;
 }
 
-int XilinxOcl::get_fd_for_buffer(cl::Buffer buf)
+int XilinxOclHelper::get_fd_for_buffer(cl::Buffer buf)
 {
     int fd;
     xclGetMemObjectFd(buf(), &fd);
     return fd;
 }
 
-cl::Buffer XilinxOcl::get_buffer_from_fd(int fd)
+cl::Buffer XilinxOclHelper::get_buffer_from_fd(int fd)
 {
     cl::Buffer buffer;
     xclGetMemObjectFromFd(context(), device(), 0, fd, &buffer());
     return buffer;
 }
 
-const cl::Context &XilinxOcl::get_context()
+const cl::Context &XilinxOclHelper::get_context()
 {
     return context;
 }
 
-XilinxOcl::XilinxOcl()
+XilinxOclHelper::XilinxOclHelper()
 {
 }
 
-XilinxOcl::~XilinxOcl()
+XilinxOclHelper::~XilinxOclHelper()
 {
 }
 
-} // namespace swm
+} // namespace example_utils
+} // namespace xilinx

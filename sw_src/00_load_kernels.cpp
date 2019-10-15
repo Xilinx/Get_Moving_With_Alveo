@@ -49,7 +49,7 @@ int main(int argc, char *argv[])
               << std::endl;
     et.add("OpenCL Initialization");
 
-    swm::XilinxOcl xocl;
+    xilinx::example_utils::XilinxOclHelper xocl;
     xocl.initialize("alveo_examples.xclbin");
 
     cl::CommandQueue q = xocl.get_command_queue();

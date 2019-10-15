@@ -43,8 +43,9 @@ struct aligned_allocator
     }
 };
 
-namespace swm {
-class XilinxOcl
+namespace xilinx {
+namespace example_utils {
+class XilinxOclHelper
 {
 private:
     bool is_initialized = false;
@@ -55,8 +56,8 @@ private:
     std::vector<cl::Device> find_xilinx_devices();
 
 public:
-    XilinxOcl();
-    ~XilinxOcl();
+    XilinxOclHelper();
+    ~XilinxOclHelper();
 
     void initialize(std::string xclbin_file_name);
 
@@ -69,5 +70,6 @@ public:
     cl::Buffer get_buffer_from_fd(int fd);
     const cl::Context &get_context();
 };
-} // namespace swm
+} // namespace example_utils
+} // namespace xilinx
 #endif

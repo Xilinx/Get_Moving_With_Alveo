@@ -61,7 +61,7 @@ int main(int argc, char *argv[])
     et.add("OpenCL Initialization");
 
     // This application will use the first Xilinx device found in the system
-    swm::XilinxOcl xocl;
+    xilinx::example_utils::XilinxOclHelper xocl;
     xocl.initialize("alveo_examples.xclbin");
 
     cl::CommandQueue q = xocl.get_command_queue();
