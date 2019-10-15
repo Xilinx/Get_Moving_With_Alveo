@@ -16,3 +16,4 @@ build/
 *.fdb_latexmk
 *.compile_summary*
 vitis_analyzer*
+*.link_summary*
