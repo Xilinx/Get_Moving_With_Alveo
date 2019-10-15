@@ -39,11 +39,9 @@ EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <omp.h>
 
 // Xilinx OpenCL and XRT includes
-#include "xcl2.hpp"
+#include "xilinx_ocl.hpp"
 
-#include <CL/cl.h>
-
-#define BUFSIZE (1024 * 1024 * 256)
+#define BUFSIZE (1024 * 1024 * 32)
 #define NUM_BUFS 10
 
 void vadd_sw(uint32_t *a, uint32_t *b, uint32_t *c, uint32_t size)
@@ -138,34 +136,20 @@ int main(int argc, char *argv[])
     // Initialize an event timer we'll use for monitoring the application
     EventTimer et;
 
-    if (argc != 2) {
-        std::cout << "Usage: 05_pipelined_vadd <xclbin>";
-        return EXIT_FAILURE;
-    }
-
     std::cout << "-- Example 5: Pipelining Kernel Execution --" << std::endl
               << std::endl;
 
     // Initialize the runtime (including a command queue) and load the
     // FPGA image
-    std::cout << "Loading XCLBin to program the Alveo board:" << std::endl
-              << std::endl;
+    std::cout << "Loading alveo_examples.xclbin to program the Alveo board" << std::endl;
     et.add("OpenCL Initialization");
 
     // This application will use the first Xilinx device found in the system
-    std::vector<cl::Device> devices = xcl::get_xil_devices();
-    cl::Device device               = devices[0];
+    swm::XilinxOcl xocl;
+    xocl.initialize("alveo_examples.xclbin");
 
-    cl::Context context(device);
-    cl::CommandQueue q(context, device, CL_QUEUE_OUT_OF_ORDER_EXEC_MODE_ENABLE);
-
-    std::string device_name    = device.getInfo<CL_DEVICE_NAME>();
-    std::string binaryFile     = xcl::find_binary_file(device_name, argv[1]);
-    cl::Program::Binaries bins = xcl::import_binary_file(binaryFile);
-
-    devices.resize(1);
-    cl::Program program(context, devices, bins);
-    cl::Kernel krnl(program, "wide_vadd");
+    cl::CommandQueue q = xocl.get_command_queue();
+    cl::Kernel krnl    = xocl.get_kernel("wide_vadd");
     et.finish();
 
     /// New code for example 01
@@ -178,34 +162,30 @@ int main(int argc, char *argv[])
     // host pointer
     try {
         et.add("Allocate contiguous OpenCL buffers");
-        std::vector<cl::Memory> inBufVec;
-        cl_mem_ext_ptr_t bank1_ext, bank2_ext;
-        bank2_ext.flags = 2 | XCL_MEM_TOPOLOGY;
-        bank2_ext.obj   = NULL;
-        bank2_ext.param = 0;
-        bank1_ext.flags = 1 | XCL_MEM_TOPOLOGY;
-        bank1_ext.obj   = NULL;
-        bank1_ext.param = 0;
-        cl::Buffer a_buf(context,
-                         static_cast<cl_mem_flags>(CL_MEM_READ_ONLY |
-                                                   CL_MEM_EXT_PTR_XILINX),
+        cl::Buffer a_buf(xocl.get_context(),
+                         static_cast<cl_mem_flags>(CL_MEM_READ_ONLY),
                          BUFSIZE * sizeof(uint32_t),
-                         &bank1_ext,
+                         NULL,
                          NULL);
-        cl::Buffer b_buf(context,
-                         static_cast<cl_mem_flags>(CL_MEM_READ_ONLY |
-                                                   CL_MEM_EXT_PTR_XILINX),
+        cl::Buffer b_buf(xocl.get_context(),
+                         static_cast<cl_mem_flags>(CL_MEM_READ_ONLY),
                          BUFSIZE * sizeof(uint32_t),
-                         &bank2_ext,
+                         NULL,
                          NULL);
-        cl::Buffer c_buf(context,
-                         static_cast<cl_mem_flags>(CL_MEM_READ_WRITE |
-                                                   CL_MEM_EXT_PTR_XILINX),
+        cl::Buffer c_buf(xocl.get_context(),
+                         static_cast<cl_mem_flags>(CL_MEM_READ_WRITE),
                          BUFSIZE * sizeof(uint32_t),
-                         &bank1_ext,
+                         NULL,
                          NULL);
         uint32_t *d = new uint32_t[BUFSIZE];
         et.finish();
+
+        // Although we'll change these later, we'll set the buffers as kernel
+        // arguments prior to mapping so that XRT can resolve the physical memory
+        // in which they need to be allocated
+        krnl.setArg(0, a_buf);
+        krnl.setArg(1, b_buf);
+        krnl.setArg(2, c_buf);
 
         et.add("Map buffers to userspace pointers");
         uint32_t *a = (uint32_t *)q.enqueueMapBuffer(a_buf,

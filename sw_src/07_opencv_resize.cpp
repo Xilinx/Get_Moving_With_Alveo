@@ -32,16 +32,15 @@ EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <chrono>
 #include <iostream>
+#include <opencv2/imgproc/types_c.h>
 #include <opencv2/opencv.hpp>
 #include <string>
 #include <sys/mman.h>
 
 // Xilinx OCL
-#include "xcl2.hpp"
+#include "xilinx_ocl.hpp"
 
-#include <CL/cl.h>
-
-uint32_t nearest_resolution_div8(uint32_t n)
+uint32_t nearest_resolution_div8(int32_t n)
 {
     int32_t q = n / 8;
 
@@ -58,17 +57,17 @@ uint32_t nearest_resolution_div8(uint32_t n)
 int main(int argc, char *argv[])
 {
     EventTimer et;
-    if (argc != 3) {
+    if (argc != 2) {
         std::cout << "Usage: 07_opencv_resize <input image>" << std::endl;
         return EXIT_FAILURE;
     }
     std::cout << "-- Example 7: OpenCV Image Resize --" << std::endl
               << std::endl;
 
-    cv::Mat image = cv::imread(argv[2], cv::IMREAD_COLOR);
+    cv::Mat image = cv::imread(argv[1], cv::IMREAD_COLOR);
 
     if (!image.data) {
-        std::cout << "ERROR: Unable to load image " << argv[2] << std::endl;
+        std::cout << "ERROR: Unable to load image " << argv[1] << std::endl;
         return EXIT_FAILURE;
     }
 
@@ -121,34 +120,41 @@ int main(int argc, char *argv[])
     std::cout << "Matrix has " << image.channels() << " channels" << std::endl;
 
     et.add("OpenCL initialization");
-    std::vector<cl::Device> devices = xcl::get_xil_devices();
+    swm::XilinxOcl xocl;
+    xocl.initialize("alveo_examples.xclbin");
 
-    cl::Device device = devices[0];
-    cl::Context context(device);
-
-    cl::CommandQueue q(context, device);
-
-    std::string device_name    = device.getInfo<CL_DEVICE_NAME>();
-    std::string binaryFile     = xcl::find_binary_file(device_name, argv[1]);
-    cl::Program::Binaries bins = xcl::import_binary_file(binaryFile);
-    devices.resize(1);
-    cl::Program program(context, devices, bins);
-    cl::Kernel krnl(program, "resize_accel_rgb");
+    cl::CommandQueue q = xocl.get_command_queue();
+    cl::Kernel krnl    = xocl.get_kernel("resize_accel_rgb");
     et.finish();
     et.add("OCL input buffer initialization");
 
     std::vector<cl::Memory> inBufVec, outBufVec;
-    cl_mem_ext_ptr_t bank0_ext;
-    bank0_ext.flags = 0 | XCL_MEM_TOPOLOGY;
-    bank0_ext.obj   = NULL;
-    bank0_ext.param = 0;
-    cl::Buffer imageToDevice(context,
+    cl::Buffer imageToDevice(xocl.get_context(),
                              static_cast<cl_mem_flags>(CL_MEM_READ_ONLY |
-                                                       CL_MEM_ALLOC_HOST_PTR |
-                                                       CL_MEM_EXT_PTR_XILINX),
+                                                       CL_MEM_ALLOC_HOST_PTR),
                              in_width * in_height * image.channels(),
-                             &bank0_ext,
+                             NULL,
                              NULL);
+
+    et.add("OCL output buffer initialization");
+    cl::Buffer imageFromDevice(xocl.get_context(),
+                               static_cast<cl_mem_flags>(CL_MEM_WRITE_ONLY |
+                                                         CL_MEM_ALLOC_HOST_PTR),
+                               out_width * out_height * image.channels(),
+                               NULL,
+                               NULL);
+    et.finish();
+
+    // We set the kernel args before mapping the buffers to allow the runtime to
+    // determine external DDR connectivity
+    krnl.setArg(0, imageToDevice);
+    krnl.setArg(1, imageFromDevice);
+    krnl.setArg(2, image.cols);
+    krnl.setArg(3, image.rows);
+    krnl.setArg(4, out_width);
+    krnl.setArg(5, out_height);
+
+    et.add("Map output buffer and populate data");
     uint8_t *buf_to_device = (uint8_t *)q.enqueueMapBuffer(imageToDevice,
                                                            CL_TRUE,
                                                            CL_MAP_WRITE,
@@ -157,18 +163,8 @@ int main(int argc, char *argv[])
     cv::Mat source_hw(image.rows, image.cols, image.type(), (void *)buf_to_device);
     image.copyTo(source_hw);
     q.enqueueUnmapMemObject(imageToDevice, buf_to_device);
-
     et.finish();
 
-    et.add("OCL output buffer initialization");
-    cl::Buffer imageFromDevice(context,
-                               static_cast<cl_mem_flags>(CL_MEM_WRITE_ONLY |
-                                                         CL_MEM_ALLOC_HOST_PTR |
-                                                         CL_MEM_EXT_PTR_XILINX),
-                               out_width * out_height * image.channels(),
-                               &bank0_ext,
-                               NULL);
-    et.finish();
 
     et.add("FPGA Kernel resize operation");
     inBufVec.push_back(imageToDevice);
@@ -184,12 +180,6 @@ int main(int argc, char *argv[])
     q.enqueueMigrateMemObjects(inBufVec, 0, &events, &event_migrate_in); // From host
     events.push_back(event_migrate_in);
 
-    krnl.setArg(0, imageToDevice);
-    krnl.setArg(1, imageFromDevice);
-    krnl.setArg(2, image.cols);
-    krnl.setArg(3, image.rows);
-    krnl.setArg(4, out_width);
-    krnl.setArg(5, out_height);
 
     // Launch the kernel
     q.enqueueTask(krnl, &events, &event_kernel);

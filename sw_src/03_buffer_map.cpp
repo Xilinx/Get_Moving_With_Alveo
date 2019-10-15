@@ -35,9 +35,7 @@ EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <string>
 
 // Xilinx OpenCL and XRT includes
-#include "xcl2.hpp"
-
-#include <CL/cl.h>
+#include "xilinx_ocl.hpp"
 
 #define BUFSIZE (1024 * 1024 * 6)
 
@@ -53,34 +51,21 @@ int main(int argc, char *argv[])
     // Initialize an event timer we'll use for monitoring the application
     EventTimer et;
 
-    if (argc != 2) {
-        std::cout << "Usage: 03_buffer_map <xclbin>";
-        return EXIT_FAILURE;
-    }
-
     std::cout << "-- Example 3: Allocate and Map Contiguous Buffers --" << std::endl
               << std::endl;
 
     // Initialize the runtime (including a command queue) and load the
     // FPGA image
-    std::cout << "Loading XCLBin to program the Alveo board:" << std::endl
+    std::cout << "Loading alveo_examples.xclbin to program the Alveo board" << std::endl
               << std::endl;
     et.add("OpenCL Initialization");
 
     // This application will use the first Xilinx device found in the system
-    std::vector<cl::Device> devices = xcl::get_xil_devices();
-    cl::Device device               = devices[0];
+    swm::XilinxOcl xocl;
+    xocl.initialize("alveo_examples.xclbin");
 
-    cl::Context context(device);
-    cl::CommandQueue q(context, device);
-
-    std::string device_name    = device.getInfo<CL_DEVICE_NAME>();
-    std::string binaryFile     = xcl::find_binary_file(device_name, argv[1]);
-    cl::Program::Binaries bins = xcl::import_binary_file(binaryFile);
-
-    devices.resize(1);
-    cl::Program program(context, devices, bins);
-    cl::Kernel krnl(program, "vadd");
+    cl::CommandQueue q = xocl.get_command_queue();
+    cl::Kernel krnl    = xocl.get_kernel("vadd");
     et.finish();
 
     /// New code for example 01
@@ -89,42 +74,38 @@ int main(int argc, char *argv[])
     // Map our user-allocated buffers as OpenCL buffers using a shared
     // host pointer
     et.add("Allocate contiguous OpenCL buffers");
-    std::vector<cl::Memory> inBufVec, outBufVec;
-    cl::Buffer a_buf(context,
+    cl::Buffer a_buf(xocl.get_context(),
                      static_cast<cl_mem_flags>(CL_MEM_READ_ONLY |
                                                CL_MEM_ALLOC_HOST_PTR),
                      BUFSIZE * sizeof(uint32_t),
                      NULL,
                      NULL);
-    cl::Buffer b_buf(context,
+    cl::Buffer b_buf(xocl.get_context(),
                      static_cast<cl_mem_flags>(CL_MEM_READ_ONLY |
                                                CL_MEM_ALLOC_HOST_PTR),
                      BUFSIZE * sizeof(uint32_t),
                      NULL,
                      NULL);
-    cl::Buffer c_buf(context,
+    cl::Buffer c_buf(xocl.get_context(),
                      static_cast<cl_mem_flags>(CL_MEM_WRITE_ONLY |
                                                CL_MEM_ALLOC_HOST_PTR),
                      BUFSIZE * sizeof(uint32_t),
                      NULL,
                      NULL);
-    
+
     // For buffer D, since we aren't using it for a kernel we'll specify the
     // bank allocation
     cl_mem_ext_ptr_t bank_ext;
     bank_ext.flags = 0 | XCL_MEM_TOPOLOGY;
     bank_ext.obj   = NULL;
     bank_ext.param = 0;
-    cl::Buffer d_buf(context,
+    cl::Buffer d_buf(xocl.get_context(),
                      static_cast<cl_mem_flags>(CL_MEM_READ_WRITE |
                                                CL_MEM_ALLOC_HOST_PTR |
                                                CL_MEM_EXT_PTR_XILINX),
                      BUFSIZE * sizeof(uint32_t),
                      &bank_ext,
                      NULL);
-    inBufVec.push_back(a_buf);
-    inBufVec.push_back(b_buf);
-    outBufVec.push_back(c_buf);
     et.finish();
 
     // Set vadd kernel arguments
@@ -167,7 +148,7 @@ int main(int argc, char *argv[])
     // Send the buffers down to the Alveo card
     et.add("Memory object migration enqueue");
     cl::Event event_sp;
-    q.enqueueMigrateMemObjects(inBufVec, 0, NULL, &event_sp);
+    q.enqueueMigrateMemObjects({a_buf, b_buf}, 0, NULL, &event_sp);
     clWaitForEvents(1, (const cl_event *)&event_sp);
 
     et.add("OCL Enqueue task");

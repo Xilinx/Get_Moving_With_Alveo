@@ -35,11 +35,9 @@ EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <string>
 
 // Xilinx OpenCL and XRT includes
-#include "xcl2.hpp"
+#include "xilinx_ocl.hpp"
 
-#include <CL/cl.h>
-
-#define BUFSIZE (1024 * 1024 * 256)
+#define BUFSIZE (1024 * 1024 * 32)
 
 void vadd_sw(uint32_t *a, uint32_t *b, uint32_t *c, uint32_t size)
 {
@@ -53,34 +51,21 @@ int main(int argc, char *argv[])
     // Initialize an event timer we'll use for monitoring the application
     EventTimer et;
 
-    if (argc != 2) {
-        std::cout << "Usage: 04_wide_vadd <xclbin>";
-        return EXIT_FAILURE;
-    }
-
     std::cout << "-- Example 4: Parallelizing the Data Path --" << std::endl
               << std::endl;
 
     // Initialize the runtime (including a command queue) and load the
     // FPGA image
-    std::cout << "Loading XCLBin to program the Alveo board:" << std::endl
+    std::cout << "Loading alveo_examples.xclbin to program the Alveo board" << std::endl
               << std::endl;
     et.add("OpenCL Initialization");
 
     // This application will use the first Xilinx device found in the system
-    std::vector<cl::Device> devices = xcl::get_xil_devices();
-    cl::Device device               = devices[0];
+    swm::XilinxOcl xocl;
+    xocl.initialize("alveo_examples.xclbin");
 
-    cl::Context context(device);
-    cl::CommandQueue q(context, device);
-
-    std::string device_name    = device.getInfo<CL_DEVICE_NAME>();
-    std::string binaryFile     = xcl::find_binary_file(device_name, argv[1]);
-    cl::Program::Binaries bins = xcl::import_binary_file(binaryFile);
-
-    devices.resize(1);
-    cl::Program program(context, devices, bins);
-    cl::Kernel krnl(program, "wide_vadd");
+    cl::CommandQueue q = xocl.get_command_queue();
+    cl::Kernel krnl    = xocl.get_kernel("wide_vadd");
     et.finish();
 
     /// New code for example 01
@@ -90,43 +75,43 @@ int main(int argc, char *argv[])
     // Map our user-allocated buffers as OpenCL buffers using a shared
     // host pointer
     et.add("Allocate contiguous OpenCL buffers");
-    std::vector<cl::Memory> inBufVec, outBufVec;
-    cl_mem_ext_ptr_t bank1_ext, bank2_ext;
-    bank2_ext.flags = 2 | XCL_MEM_TOPOLOGY;
-    bank2_ext.obj   = NULL;
-    bank2_ext.param = 0;
-    bank1_ext.flags = 1 | XCL_MEM_TOPOLOGY;
-    bank1_ext.obj   = NULL;
-    bank1_ext.param = 0;
-    cl::Buffer a_buf(context,
-                     static_cast<cl_mem_flags>(CL_MEM_READ_ONLY |
-                                               CL_MEM_EXT_PTR_XILINX),
+    cl_mem_ext_ptr_t bank_ext;
+    bank_ext.flags = 2 | XCL_MEM_TOPOLOGY;
+    bank_ext.obj   = NULL;
+    bank_ext.param = 0;
+    cl::Buffer a_buf(xocl.get_context(),
+                     static_cast<cl_mem_flags>(CL_MEM_READ_ONLY),
                      BUFSIZE * sizeof(uint32_t),
-                     &bank1_ext,
+                     NULL,
                      NULL);
-    cl::Buffer b_buf(context,
-                     static_cast<cl_mem_flags>(CL_MEM_READ_ONLY |
-                                               CL_MEM_EXT_PTR_XILINX),
+    cl::Buffer b_buf(xocl.get_context(),
+                     static_cast<cl_mem_flags>(CL_MEM_READ_ONLY),
                      BUFSIZE * sizeof(uint32_t),
-                     &bank2_ext,
+                     NULL,
                      NULL);
-    cl::Buffer c_buf(context,
-                     static_cast<cl_mem_flags>(CL_MEM_READ_WRITE |
-                                               CL_MEM_EXT_PTR_XILINX),
+    cl::Buffer c_buf(xocl.get_context(),
+                     static_cast<cl_mem_flags>(CL_MEM_READ_WRITE),
                      BUFSIZE * sizeof(uint32_t),
-                     &bank1_ext,
+                     NULL,
                      NULL);
-    cl::Buffer d_buf(context,
+    cl::Buffer d_buf(xocl.get_context(),
                      static_cast<cl_mem_flags>(CL_MEM_READ_WRITE |
                                                CL_MEM_ALLOC_HOST_PTR |
                                                CL_MEM_EXT_PTR_XILINX),
                      BUFSIZE * sizeof(uint32_t),
-                     &bank2_ext,
+                     &bank_ext,
                      NULL);
-    inBufVec.push_back(a_buf);
-    inBufVec.push_back(b_buf);
-    outBufVec.push_back(c_buf);
     et.finish();
+
+    // Set vadd kernel arguments. We do this before mapping the buffers to allow XRT
+    // to allocate the buffers in the appropriate memory banks for the selected
+    // kernels. For buffer 'd' we explicitly set a bank above, but this buffer is
+    // never migrated to the Alveo card so this mapping is theoretical.
+    et.add("Set kernel arguments");
+    krnl.setArg(0, a_buf);
+    krnl.setArg(1, b_buf);
+    krnl.setArg(2, c_buf);
+    krnl.setArg(3, BUFSIZE);
 
     et.add("Map buffers to userspace pointers");
     uint32_t *a = (uint32_t *)q.enqueueMapBuffer(a_buf,
@@ -161,15 +146,8 @@ int main(int argc, char *argv[])
     // Send the buffers down to the Alveo card
     et.add("Memory object migration enqueue");
     cl::Event event_sp;
-    q.enqueueMigrateMemObjects(inBufVec, 0, NULL, &event_sp);
+    q.enqueueMigrateMemObjects({a_buf, b_buf}, 0, NULL, &event_sp);
     clWaitForEvents(1, (const cl_event *)&event_sp);
-
-    // Set vadd kernel arguments
-    et.add("Set kernel arguments");
-    krnl.setArg(0, a_buf);
-    krnl.setArg(1, b_buf);
-    krnl.setArg(2, c_buf);
-    krnl.setArg(3, BUFSIZE);
 
     et.add("OCL Enqueue task");
 

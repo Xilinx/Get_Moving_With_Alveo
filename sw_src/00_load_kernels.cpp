@@ -33,44 +33,27 @@ EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <string>
 
 // Xilinx OpenCL and XRT includes
-#include "xcl2.hpp"
-
-#include <CL/cl.h>
-
+#include "xilinx_ocl.hpp"
 
 int main(int argc, char *argv[])
 {
     // Initialize an event timer we'll use for monitoring the application
     EventTimer et;
 
-    if (argc != 2) {
-        std::cout << "Usage: 00_load_kernels <xclbin>";
-        return EXIT_FAILURE;
-    }
-
     std::cout << "-- Example 0: Loading the FPGA Binary --" << std::endl
               << std::endl;
 
     // Initialize the runtime (including a command queue) and load the
     // FPGA image
-    std::cout << "Loading XCLBin to program the Alveo board:" << std::endl
+    std::cout << "Loading alveo_examples.xclbin to program the Alveo board" << std::endl
               << std::endl;
     et.add("OpenCL Initialization");
 
-    // This application will use the first Xilinx device found in the system
-    std::vector<cl::Device> devices = xcl::get_xil_devices();
-    cl::Device device               = devices[0];
+    swm::XilinxOcl xocl;
+    xocl.initialize("alveo_examples.xclbin");
 
-    cl::Context context(device);
-    cl::CommandQueue q(context, device);
-
-    std::string device_name    = device.getInfo<CL_DEVICE_NAME>();
-    std::string binaryFile     = xcl::find_binary_file(device_name, argv[1]);
-    cl::Program::Binaries bins = xcl::import_binary_file(binaryFile);
-
-    devices.resize(1);
-    cl::Program program(context, devices, bins);
-    cl::Kernel krnl(program, "vadd");
+    cl::CommandQueue q = xocl.get_command_queue();
+    cl::Kernel krnl    = xocl.get_kernel("vadd");
     et.finish();
 
     std::cout << std::endl
