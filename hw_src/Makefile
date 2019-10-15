@@ -37,4 +37,4 @@ resize_blur.xo: resize_blur.cpp
 	v++ --kernel resize_blur_rgb $(VPPFLAGS) $(VISION_LIB_FLAGS) -c -o $@ $<
 
 clean:
-	$(RM) -r *.xo _x .Xil sd_card *.xclbin *.ltx *.log *.info
+	$(RM) -r *.xo _x .Xil sd_card *.xclbin *.ltx *.log *.info *compile_summary* vitis_analyzer*
