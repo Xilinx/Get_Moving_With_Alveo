@@ -1,4 +1,4 @@
-#include "xilinx_ocl.hpp"
+#include "xilinx_ocl_helper.hpp"
 
 #include <unistd.h>
 

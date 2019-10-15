@@ -22,7 +22,7 @@ endif()
 # Library of utility functions common to all applications
 add_library(example_utils STATIC
   sw_src/event_timer.cpp
-  sw_src/xilinx_ocl.cpp
+  sw_src/xilinx_ocl_helper.cpp
 )
 
 target_include_directories(example_utils PUBLIC

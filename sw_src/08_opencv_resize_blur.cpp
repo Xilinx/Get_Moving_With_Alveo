@@ -38,7 +38,7 @@ EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <sys/mman.h>
 
 // Xilinx OCL
-#include "xilinx_ocl.hpp"
+#include "xilinx_ocl_helper.hpp"
 
 uint32_t nearest_resolution_div8(int32_t n)
 {

@@ -35,7 +35,7 @@ EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <string>
 
 // Xilinx OpenCL and XRT includes
-#include "xilinx_ocl.hpp"
+#include "xilinx_ocl_helper.hpp"
 
 #define BUFSIZE (1024 * 1024 * 6)
 
