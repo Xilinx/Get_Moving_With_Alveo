@@ -10,9 +10,9 @@ VISION_LIB_FLAGS := -I. -I./Vitis_Libraries/vision/L1/include --config vision_co
 VPPFLAGS := --platform $(PFM) -t $(TARGET) -s -g
 VPPLFLAGS := --jobs $(JOBS) --config profile.ini
 ifeq ($(PLATFORM), xilinx_u250_xdma_201830_2)
-	VPPLFLAGS += --config connectivity_u250.ini
+	VPPLFLAGS += --config connectivity_u250.ini --trace_memory=DDR[1]
 else
-	VPPLFLAGS += --config connectivity_u200.ini
+	VPPLFLAGS += --config connectivity_u200.ini --trace_memory=DDR[1]
 endif
 
 XOS = vadd.xo wide_vadd.xo resize_rgb.xo resize_blur.xo
@@ -37,4 +37,4 @@ resize_blur.xo: resize_blur.cpp
 	v++ --kernel resize_blur_rgb $(VPPFLAGS) $(VISION_LIB_FLAGS) -c -o $@ $<
 
 clean:
-	$(RM) -r *.xo _x .Xil sd_card *.xclbin *.ltx *.log *.info *compile_summary* vitis_analyzer*
+	$(RM) -r *.xo _x .Xil sd_card *.xclbin *.ltx *.log *.info *compile_summary* vitis_analyzer* *link_summary*
