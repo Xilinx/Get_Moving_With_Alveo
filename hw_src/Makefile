@@ -1,6 +1,6 @@
 include config.mk
 
-PFM := $(PLATFORM_REPO_PATH)/$(PLATFORM)/$(PLATFORM).xpfm
+PFM := $(PLATFORM_REPO_PATHS)/$(PLATFORM)/$(PLATFORM).xpfm
 
 NCPUS := $(shell grep -c ^processor /proc/cpuinfo)
 JOBS := $(shell expr $(NCPUS) - 1)
