@@ -10,10 +10,11 @@ VISION_LIB_FLAGS := -I. -I./Vitis_Libraries/vision/L1/include --config vision_co
 VPPFLAGS := --platform $(PFM) -t $(TARGET) -s -g
 VPPLFLAGS := --jobs $(JOBS) --config profile.ini
 ifeq ($(PLATFORM), xilinx_u250_xdma_201830_2)
-	VPPLFLAGS += --config connectivity_u250.ini --trace_memory=DDR[1]
+	BOARD_CONFIG := connectivity_u250.ini
 else
-	VPPLFLAGS += --config connectivity_u200.ini --trace_memory=DDR[1]
+	BOARD_CONFIG := connectivity_u200.ini
 endif
+VPPLFLAGS += --config $(BOARD_CONFIG)
 
 XOS = vadd.xo wide_vadd.xo resize_rgb.xo resize_blur.xo
 
@@ -21,7 +22,7 @@ XOS = vadd.xo wide_vadd.xo resize_rgb.xo resize_blur.xo
 
 all: alveo_examples.xclbin
 
-alveo_examples.xclbin: $(XOS)
+alveo_examples.xclbin: $(XOS) $(BOARD_CONFIG)
 	v++ -l $(VPPFLAGS) $(VPPLFLAGS) -o $@ $(XOS)
 
 vadd.xo: vadd.cpp
@@ -30,10 +31,10 @@ vadd.xo: vadd.cpp
 wide_vadd.xo: wide_vadd.cpp
 	v++ --kernel wide_vadd $(VPPFLAGS) -c -o $@ $<
 
-resize_rgb.xo: resize_rgb.cpp
+resize_rgb.xo: resize_rgb.cpp vision_config.ini
 	v++ --kernel resize_accel_rgb $(VPPFLAGS) $(VISION_LIB_FLAGS) -c -o $@ $<
 
-resize_blur.xo: resize_blur.cpp
+resize_blur.xo: resize_blur.cpp vision_config.ini
 	v++ --kernel resize_blur_rgb $(VPPFLAGS) $(VISION_LIB_FLAGS) -c -o $@ $<
 
 clean:
