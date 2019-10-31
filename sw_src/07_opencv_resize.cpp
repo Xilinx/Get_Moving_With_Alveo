@@ -172,17 +172,9 @@ int main(int argc, char *argv[])
 
     cl::Event event_migrate_in, event_migrate_out, event_kernel;
     std::vector<cl::Event> events;
-    q.enqueueMigrateMemObjects(outBufVec,
-                               CL_MIGRATE_MEM_OBJECT_CONTENT_UNDEFINED,
-                               NULL,
-                               &event_migrate_out);
-    events.push_back(event_migrate_out);
-    q.enqueueMigrateMemObjects(inBufVec, 0, &events, &event_migrate_in); // From host
-    events.push_back(event_migrate_in);
-
 
     // Launch the kernel
-    q.enqueueTask(krnl, &events, &event_kernel);
+    q.enqueueTask(krnl, NULL, &event_kernel);
     events.push_back(event_kernel);
     clWaitForEvents(events.size(), (const cl_event *)events.data());
 

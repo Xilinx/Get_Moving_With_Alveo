@@ -76,7 +76,7 @@ int main(int argc, char *argv[])
     // host pointer
     et.add("Allocate contiguous OpenCL buffers");
     cl_mem_ext_ptr_t bank_ext;
-    bank_ext.flags = 2 | XCL_MEM_TOPOLOGY;
+    bank_ext.flags = 0 | XCL_MEM_TOPOLOGY;
     bank_ext.obj   = NULL;
     bank_ext.param = 0;
     cl::Buffer a_buf(xocl.get_context(),
