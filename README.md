@@ -8,7 +8,7 @@ the xf::OpenCV hardware accelerated library. To properly clone this repository
 be sure to include the ```--recurse-submodules``` command line switch.
 
 ```bash
-git clone --recurse-submodules https://github.com/Xilinx/xrt_onboarding.git
+git clone --recurse-submodules https://github.com/Xilinx/~~Get_Moving_With_Alveo~~.git
 ```
 
 This repository includes both hardware and software sources.
@@ -18,8 +18,8 @@ release 2019.2 and has been hardware-validated against the following platforms:
 
 | Alveo Card |         Platform          |   XRT    |
 | :--------- | :-----------------------: | :------: |
-| U200       | xilinx_u200_xdma_201830_2 | 2.3.1198 |
-| U250       | xilinx_u250_xdma_201830_2 | 2.3.1198 |
+| U200       | xilinx_u200_xdma_201830_2 | 2.3.1302 |
+| U250       | xilinx_u250_xdma_201830_2 | 2.3.1302 |
 
 ## Building the Hardware Design
 
