@@ -8,7 +8,7 @@ the xf::OpenCV hardware accelerated library. To properly clone this repository
 be sure to include the ```--recurse-submodules``` command line switch.
 
 ```bash
-git clone --recurse-submodules https://github.com/Xilinx/~~Get_Moving_With_Alveo~~.git
+git clone --recurse-submodules https://github.com/Xilinx/Get_Moving_With_Alveo.git
 ```
 
 This repository includes both hardware and software sources.
