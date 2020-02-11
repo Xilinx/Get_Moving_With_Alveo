@@ -33,9 +33,7 @@ void XilinxOclHelper::initialize(std::string xclbin_file_name)
     // Find Xilinx OpenCL devices
     std::vector<cl::Device> devices = find_xilinx_devices();
 
-    // Initialize our OpenCL context
-    device  = devices[0];
-    context = cl::Context(device);
+    bool programmed = false;
 
     // Load the XCLBIN
     if (access(xclbin_file_name.c_str(), R_OK) != 0) {
@@ -51,13 +49,28 @@ void XilinxOclHelper::initialize(std::string xclbin_file_name)
     cl::Program::Binaries bins;
     bins.push_back({buf, nb});
 
-    // TODO: Don't automatically assume that device 0 is the correct one
-    devices.resize(1);
+    cl_int err;
+    // Initialize our OpenCL context
+    for (unsigned int i = 0; i < devices.size(); i++) {
+        device  = devices[i];
+        context = cl::Context(device);
 
-    // Program the device
-    program = cl::Program(context, devices, bins);
+        // Attempt to program the devic
+        try {
+            program = cl::Program(context, {device}, bins, NULL, &err);
+        }
+        catch (cl::Error &e) {
+            continue;
+        }
 
-    is_initialized = true;
+        programmed     = true;
+        is_initialized = true;
+        break;
+    }
+
+    if (!programmed) {
+        throw_lineexception("Provided XCLBIN is not compatible with any system device");
+    }
 }
 
 cl::Kernel XilinxOclHelper::get_kernel(std::string kernel_name)
