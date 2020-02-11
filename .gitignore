@@ -17,3 +17,4 @@ build/
 *.compile_summary*
 vitis_analyzer*
 *.link_summary*
+hw_src/ip_cache

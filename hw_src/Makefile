@@ -9,21 +9,26 @@ VISION_LIB_FLAGS := -I. -I./Vitis_Libraries/vision/L1/include --config vision_co
 
 VPPFLAGS := --platform $(PFM) -t $(TARGET) -s -g
 VPPLFLAGS := --jobs $(JOBS) --config profile.ini
+
+BOARD_CONFIG := connectivity_u200.ini
 ifeq ($(PLATFORM), xilinx_u250_xdma_201830_2)
 	BOARD_CONFIG := connectivity_u250.ini
-else
-	BOARD_CONFIG := connectivity_u200.ini
+endif
+ifeq ($(PLATFORM), xilinx_u50_xdma_201920_1)
+	BOARD_CONFIG := connectivity_u50.ini
 endif
 VPPLFLAGS += --config $(BOARD_CONFIG)
 
 XOS = vadd.xo wide_vadd.xo resize_rgb.xo resize_blur.xo
+
+IP_CACHE_DIR ?= ../../../../ip_cache
 
 .phony: clean traces help
 
 all: alveo_examples.xclbin
 
 alveo_examples.xclbin: $(XOS) $(BOARD_CONFIG)
-	v++ -l $(VPPFLAGS) $(VPPLFLAGS) -o $@ $(XOS)
+	v++ -l $(VPPFLAGS) $(VPPLFLAGS) -o $@ $(XOS) --remote_ip_cache ${IP_CACHE_DIR}
 
 vadd.xo: vadd.cpp
 	v++ --kernel vadd $(VPPFLAGS) -c -o $@ $<
