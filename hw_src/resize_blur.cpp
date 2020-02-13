@@ -61,8 +61,8 @@ extern "C"
                          int height_out,
                          float sigma)
     {
-#pragma HLS INTERFACE m_axi port = image_in offset = slave bundle = image_in_gmem
-#pragma HLS INTERFACE m_axi port = image_out offset = slave bundle = image_out_gmem
+#pragma HLS INTERFACE m_axi port = image_in offset = slave bundle = image_in_gmem max_read_burst_length=256
+#pragma HLS INTERFACE m_axi port = image_out offset = slave bundle = image_out_gmem max_write_burst_length=256
 #pragma HLS INTERFACE s_axilite port = image_in bundle = control
 #pragma HLS INTERFACE s_axilite port = image_out bundle = control
 #pragma HLS INTERFACE s_axilite port = width_in bundle = control
