@@ -16,10 +16,13 @@ This repository includes both hardware and software sources.
 This repository has been validated against the Vitis Unified Development Environment
 release 2019.2 and has been hardware-validated against the following platforms:
 
-| Alveo Card |         Platform          |   XRT    |
-| :--------- | :-----------------------: | :------: |
-| U200       | xilinx_u200_xdma_201830_2 | 2.3.1302 |
-| U250       | xilinx_u250_xdma_201830_2 | 2.3.1302 |
+| Alveo Card |         Platform                 |   XRT    |
+| :--------- | :------------------------------: | :------: |
+| U200       | xilinx_u200_xdma_201830_2        | 2.3.1302 |
+| U200       | xilinx_u200_xdma_201830_2        | 2.5.309  |
+| U250       | xilinx_u250_xdma_201830_2        | 2.3.1302 |
+| U250       | xilinx_u250_xdma_201830_2        | 2.5.309  |
+| U50        | xilinx_u50_gen3x16_xdma_201920_3 | 2.5.309  |
 
 ## Building the Hardware Design
 
@@ -44,6 +47,15 @@ Then build the platform:
 cd hw_src
 make
 ```
+
+Alternately, if you want to specify a particular platform on the command line, run:
+
+```bash
+cd hw_src
+PLATFORM=xilinx_u50_gen3x16_xdma_201920_3 make
+```
+
+Substitute your platform name as needed.
 
 ## Building the Software Design
 
