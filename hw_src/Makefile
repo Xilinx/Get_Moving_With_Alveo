@@ -11,10 +11,10 @@ VPPFLAGS := --platform $(PFM) -t $(TARGET) -s -g
 VPPLFLAGS := --jobs $(JOBS) --config profile.ini
 
 BOARD_CONFIG := connectivity_u200.ini
-ifeq ($(PLATFORM), xilinx_u250_xdma_201830_2)
+ifeq (xilinx_u250, $(findstring xilinx_u250, $(PLATFORM)))
 	BOARD_CONFIG := connectivity_u250.ini
 endif
-ifeq ($(PLATFORM), xilinx_u50_xdma_201920_1)
+ifeq (xilinx_u50, $(findstring xilinx_u50, $(PLATFORM)))
 	BOARD_CONFIG := connectivity_u50.ini
 endif
 VPPLFLAGS += --config $(BOARD_CONFIG)
