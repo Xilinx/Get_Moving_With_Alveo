@@ -14,15 +14,13 @@ git clone --recurse-submodules https://github.com/Xilinx/Get_Moving_With_Alveo.g
 This repository includes both hardware and software sources.
 
 This repository has been validated against the Vitis Unified Development Environment
-release 2019.2 and has been hardware-validated against the following platforms:
+release 2020.1 and has been hardware-validated against the following platforms:
 
 | Alveo Card |         Platform                 |   XRT    |
 | :--------- | :------------------------------: | :------: |
-| U200       | xilinx_u200_xdma_201830_2        | 2.3.1302 |
-| U200       | xilinx_u200_xdma_201830_2        | 2.5.309  |
-| U250       | xilinx_u250_xdma_201830_2        | 2.3.1302 |
-| U250       | xilinx_u250_xdma_201830_2        | 2.5.309  |
-| U50        | xilinx_u50_gen3x16_xdma_201920_3 | 2.5.309  |
+| U200       | xilinx_u200_xdma_201830_2        | 2.6.655  |
+| U250       | xilinx_u250_xdma_201830_2        | 2.6.655  |
+| U50        | xilinx_u50_gen3x16_xdma_201920_3 | 2.6.655  |
 
 ## Building the Hardware Design
 
